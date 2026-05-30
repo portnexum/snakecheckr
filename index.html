@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SnakeCheckr — See who switched up on you.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030504;
+      --bg-soft: #09100b;
+      --panel: rgba(10, 16, 12, 0.78);
+      --panel-2: rgba(14, 22, 16, 0.9);
+      --line: rgba(124, 255, 59, 0.14);
+      --text: #eef7ef;
+      --muted: #9eb29f;
+      --accent: #7cff3b;
+      --accent-2: #9dff68;
+      --accent-dim: rgba(124, 255, 59, 0.14);
+      --shadow: 0 0 0 1px rgba(124, 255, 59, 0.08), 0 18px 60px rgba(0, 0, 0, 0.45);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --container: 1280px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(124,255,59,0.10), transparent 28%),
+        radial-gradient(circle at 85% 18%, rgba(124,255,59,0.08), transparent 24%),
+        linear-gradient(180deg, #020302 0%, #050805 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(124,255,59,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,255,59,0.03) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.7));
+    }
+
+    .shell {
+      width: min(var(--container), calc(100% - 32px));
+      margin: 24px auto;
+      min-height: calc(100vh - 48px);
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .panel {
+      position: relative;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(10,16,12,0.9), rgba(7,12,9,0.78));
+      box-shadow: var(--shadow);
+      border-radius: 32px;
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+
+    .panel::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 16%, transparent 84%, rgba(255,255,255,0.02));
+    }
+
+    .left {
+      padding: 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .right {
+      padding: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-wrap {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(124,255,59,0.16), rgba(124,255,59,0.06));
+      border: 1px solid rgba(124,255,59,0.18);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 0 1px rgba(124,255,59,0.06), 0 0 30px rgba(124,255,59,0.12);
+      transition: transform .25s ease, box-shadow .25s ease;
+      cursor: pointer;
+    }
+
+    .logo-wrap:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 0 0 1px rgba(124,255,59,0.1), 0 0 42px rgba(124,255,59,0.18);
+    }
+
+    .logo-eye {
+      width: 28px;
+      height: 28px;
+      position: relative;
+      border: 2px solid var(--accent);
+      border-radius: 50% 50% 48% 48%;
+      transform: rotate(-6deg);
+      box-shadow: 0 0 18px rgba(124,255,59,0.22);
+      overflow: hidden;
+    }
+
+    .logo-eye::before {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #d4ffbf 0%, var(--accent-2) 36%, #56c623 100%);
+      filter: saturate(1.15);
+    }
+
+    .logo-eye::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 50%;
+      width: 6px;
+      height: 20px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: #071007;
+      box-shadow: 0 0 10px rgba(0,0,0,0.35);
+      transition: transform .25s ease, width .25s ease;
+    }
+
+    .logo-wrap:hover .logo-eye::after {
+      width: 4px;
+      transform: translateX(-50%) scaleY(0.92);
+    }
+
+    .brand-copy h1 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    .brand-copy p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(124,255,59,0.08);
+      border: 1px solid rgba(124,255,59,0.12);
+      color: #d8f9c9;
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 14px rgba(124,255,59,0.45);
+      animation: pulse 1.8s infinite;
+      flex: 0 0 auto;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.25); opacity: 0.7; }
+    }
+
+    .hero {
+      max-width: 680px;
+      padding-top: 12px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(124,255,59,0.06);
+      border: 1px solid rgba(124,255,59,0.14);
+      color: #d8f9c9;
+      font-size: 0.86rem;
+      margin-bottom: 20px;
+    }
+
+    .hero h2 {
+      margin: 0;
+      font-size: clamp(2.7rem, 5vw, 5.4rem);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+    }
+
+    .hero .sub {
+      font-size: clamp(1.1rem, 1.8vw, 1.35rem);
+      color: #dff3da;
+      margin: 14px 0 14px;
+      line-height: 1.35;
+      max-width: 560px;
+    }
+
+    .hero .desc {
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+      max-width: 610px;
+      margin: 0 0 24px;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+
+    .btn {
+      appearance: none;
+      border: none;
+      outline: none;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 0.95rem;
+    }
+
+    .btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary {
+      background: linear-gradient(180deg, var(--accent-2), var(--accent));
+      color: #071007;
+      box-shadow: 0 10px 28px rgba(124,255,59,0.24);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.02);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .btn-ghost {
+      background: rgba(124,255,59,0.08);
+      color: #d9fcca;
+      border: 1px solid rgba(124,255,59,0.14);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .card {
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, rgba(14,21,16,0.86), rgba(8,13,10,0.9));
+      border: 1px solid rgba(124,255,59,0.10);
+    }
+
+    .card h3 {
+      margin: 0 0 12px;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .security-list, .steps-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+
+    .security-list li, .steps-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: #dfeadf;
+      font-size: 0.93rem;
+      line-height: 1.5;
+    }
+
+    .security-list li::before, .steps-list li::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--accent);
+      margin-top: 7px;
+      box-shadow: 0 0 14px rgba(124,255,59,0.4);
+      flex: 0 0 auto;
+    }
+
+    .footer-note {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      color: #879788;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 18px;
+    }
+
+    .onboard {
+      width: 100%;
+      max-width: 540px;
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(12,18,14,0.95), rgba(7,11,8,0.92));
+      border: 1px solid rgba(124,255,59,0.12);
+      box-shadow: 0 0 0 1px rgba(124,255,59,0.06), 0 24px 80px rgba(0,0,0,0.45);
+      overflow: hidden;
+    }
+
+    .onboard-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .window-controls span {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+    }
+
+    .window-controls span:nth-child(1) { background: rgba(255,255,255,0.18); }
+    .window-controls span:nth-child(2) { background: rgba(124,255,59,0.55); }
+    .window-controls span:nth-child(3) { background: rgba(255,255,255,0.12); }
+
+    .scan-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mini-badge {
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(124,255,59,0.10);
+      background: rgba(124,255,59,0.06);
+      color: #daf8ce;
+      font-size: 0.78rem;
+    }
+
+    .onboard-body {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .step-indicators {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .step-pill {
+      padding: 9px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(255,255,255,0.02);
+      color: #8e9b8f;
+      font-size: 0.78rem;
+      text-align: center;
+      transition: all .25s ease;
+    }
+
+    .step-pill.active {
+      background: rgba(124,255,59,0.09);
+      border-color: rgba(124,255,59,0.18);
+      color: #e7fadd;
+    }
+
+    .step-pill.done {
+      color: #c7ddbe;
+      border-color: rgba(124,255,59,0.12);
+    }
+
+    .main-stage { display: grid; }
+
+    .stage-card {
+      display: none;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 13px;
+      padding: 18px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(13,19,15,0.94), rgba(9,14,11,0.92));
+      border: 1px solid rgba(124,255,59,0.08);
+      min-height: 370px;
+    }
+
+    .stage-card.active {
+      display: grid;
+      animation: fadeUp .3s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(7px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .stage-title h3 { margin: 0 0 4px; font-size: 1.05rem; }
+    .stage-title p  { margin: 0; color: var(--muted); font-size: 0.9rem; }
+
+    .status-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 11px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: #dbe8db;
+      font-size: 0.8rem;
+    }
+
+    .field-wrap { display: grid; gap: 10px; align-content: start; }
+
+    .input-shell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.02);
+      padding: 13px 15px;
+      transition: border-color .2s ease;
+    }
+
+    .input-shell:focus-within {
+      border-color: rgba(124,255,59,0.3);
+    }
+
+    .input-prefix { color: #7fdc55; font-weight: 600; }
+
+    input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font: inherit;
+      width: 100%;
+      font-size: 1rem;
+    }
+
+    input::placeholder { color: #6f7e70; }
+
+    .terminal {
+      height: 190px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(7,10,8,0.98), rgba(4,7,5,0.98));
+      border: 1px solid rgba(124,255,59,0.08);
+      padding: 14px;
+      overflow-y: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.84rem;
+      line-height: 1.55;
+      color: #c0ffc0;
+    }
+
+    .terminal-line { margin: 0 0 7px; color: #b5d4b5; }
+    .terminal-line strong { color: #98ff68; font-weight: 600; }
+    .terminal-line.muted { color: #7d927e; }
+    .terminal-line.err   { color: #ff7070; }
+
+    .progress-wrap { display: grid; gap: 8px; align-content: end; }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      color: #cfe8c7;
+      font-size: 0.86rem;
+    }
+
+    .progress-bar {
+      height: 11px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.04);
+      position: relative;
+    }
+
+    .progress-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #5ed228, #a4ff78);
+      box-shadow: 0 0 24px rgba(124,255,59,0.22);
+      transition: width .4s ease;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .tiny { color: var(--muted); font-size: 0.83rem; line-height: 1.6; }
+
+    .success-box {
+      display: grid;
+      gap: 13px;
+      align-content: center;
+      justify-items: start;
+      height: 100%;
+    }
+
+    .success-ring {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 50% 35%, rgba(124,255,59,0.32), rgba(124,255,59,0.06));
+      border: 1px solid rgba(124,255,59,0.18);
+      box-shadow: 0 0 36px rgba(124,255,59,0.14);
+      font-size: 1.4rem;
+      color: var(--accent);
+    }
+
+    .success-box h4 { margin: 0; font-size: 1.3rem; }
+    .success-box p  { margin: 0; color: var(--muted); line-height: 1.65; max-width: 440px; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+      width: 100%;
+    }
+
+    .mini-stat {
+      padding: 13px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .mini-stat span   { display: block; color: #849585; font-size: 0.74rem; margin-bottom: 5px; }
+    .mini-stat strong { font-size: 1.05rem; color: #f3fbef; }
+
+    .glow-line {
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(124,255,59,0.36), transparent);
+    }
+
+    .error-msg {
+      color: #ff9090;
+      font-size: 0.85rem;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(255,80,80,0.06);
+      border: 1px solid rgba(255,80,80,0.12);
+      display: none;
+    }
+
+    @media (max-width: 1100px) {
+      .shell { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 700px) {
+      .shell { width: calc(100% - 18px); margin: 9px auto; gap: 12px; }
+      .left, .right { padding: 18px; }
+      .grid { grid-template-columns: 1fr; }
+      .step-indicators { grid-template-columns: repeat(2, 1fr); }
+      .summary-grid { grid-template-columns: 1fr; }
+      .hero h2 { font-size: clamp(2.2rem, 11vw, 3.5rem); }
+      .stage-card { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<main class="shell">
+
+  <!-- ═══════════════ LEFT PANEL ═══════════════ -->
+  <section class="panel left">
+    <div>
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo-wrap" id="logoBtn" aria-label="SnakeCheckr home">
+            <div class="logo-eye"></div>
+          </div>
+          <div class="brand-copy">
+            <h1>SnakeCheckr</h1>
+            <p>See who switched up on you.</p>
+          </div>
+        </div>
+        <div class="badge-row">
+          <div class="pill"><span class="dot"></span> 100% password-free</div>
+          <div class="pill">12,000+ scans completed</div>
+        </div>
+      </div>
+
+      <div class="hero">
+        <div class="eyebrow"><span class="dot"></span> Secure browser automation</div>
+        <h2>SnakeCheckr</h2>
+        <p class="sub">See who switched up on you.</p>
+        <p class="desc">Instantly check who unfollowed you on Instagram using secure browser automation. Fast onboarding, clean local workflow, no clutter.</p>
+        <div class="cta-row">
+          <button class="btn btn-primary" id="heroStart">Start Scan</button>
+          <a class="btn btn-secondary" href="https://www.google.com/chrome/" target="_blank" rel="noopener">Download Chrome v148</a>
+        </div>
+      </div>
+
+      <div class="grid">
+        <article class="card">
+          <h3>Security First</h3>
+          <ul class="security-list">
+            <li>100% password-free</li>
+            <li>Login happens directly through Chrome</li>
+            <li>We never store your credentials</li>
+            <li>Your data stays on your machine</li>
+            <li>Export your results as a .txt file before closing the session</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>How it works</h3>
+          <ol class="steps-list">
+            <li>Install Chrome (v148 required)</li>
+            <li>Enter your Instagram username</li>
+            <li>Login securely through Chrome</li>
+            <li>SnakeCheckr scans your followers</li>
+            <li>Export your .txt results instantly</li>
+          </ol>
+        </article>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      <span>SnakeCheckr is not affiliated with Instagram or Meta.</span>
+      <span>Use responsibly.</span>
+      <span>Browser automation is required for follower scanning functionality.</span>
+    </div>
+
+    <div class="glow-line"></div>
+  </section>
+
+  <!-- ═══════════════ RIGHT PANEL ═══════════════ -->
+  <section class="panel right" id="scanPanel">
+    <div class="onboard">
+
+      <div class="onboard-head">
+        <div class="window-controls" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="scan-meta">
+          <div class="mini-badge" id="scanStatusBadge">Ready to scan</div>
+          <div class="mini-badge" id="scanTimer" style="font-variant-numeric:tabular-nums">00:00</div>
+        </div>
+      </div>
+
+      <div class="onboard-body">
+
+        <div class="step-indicators">
+          <div class="step-pill active" data-step-pill="1">1. Username</div>
+          <div class="step-pill"        data-step-pill="2">2. Login</div>
+          <div class="step-pill"        data-step-pill="3">3. Scan</div>
+          <div class="step-pill"        data-step-pill="4">4. Export</div>
+        </div>
+
+        <div class="main-stage">
+
+          <!-- STEP 1 -->
+          <section class="stage-card active" data-step="1">
+            <div class="stage-title">
+              <h3>Enter Instagram Username</h3>
+              <p>Start with your public handle — no password needed.</p>
+            </div>
+            <div class="status-row">
+              <div class="status"><span class="dot"></span> Local session</div>
+              <div class="status">Chrome v148 required</div>
+            </div>
+            <div class="field-wrap">
+              <label class="input-shell">
+                <span class="input-prefix">@</span>
+                <input id="usernameInput" type="text" placeholder="yourusername" autocomplete="off" spellcheck="false" />
+              </label>
+              <div class="error-msg" id="usernameError">Please enter a valid username.</div>
+              <div class="tiny">Your username is used only to guide the local scan flow.</div>
+            </div>
+            <div class="action-row">
+              <button class="btn btn-primary" id="continueBtn">Continue</button>
+            </div>
+          </section>
+
+          <!-- STEP 2 -->
+          <section class="stage-card" data-step="2">
+            <div class="stage-title">
+              <h3>Launch Chrome Login</h3>
+              <p>Sign in securely through your local Chrome session.</p>
+            </div>
+            <div class="status-row">
+              <div class="status"><span class="dot"></span> Waiting for secure login...</div>
+              <div class="status" id="accountPreview">Handle: —</div>
+            </div>
+            <div class="terminal" id="loginTerminal">
+              <div class="terminal-line"><strong>[init]</strong> Chrome environment ready.</div>
+              <div class="terminal-line"><strong>[auth]</strong> Manual login required in browser window.</div>
+              <div class="terminal-line muted">Log in, then click "Login Complete" to begin the scan.</div>
+            </div>
+            <div class="action-row">
+              <button class="btn btn-primary"   id="launchLoginBtn">Launch Chrome Login</button>
+              <button class="btn btn-secondary" id="loginDoneBtn" disabled>Login Complete →</button>
+              <button class="btn btn-ghost"     id="backToStep1">Back</button>
+            </div>
+          </section>
+
+          <!-- STEP 3 -->
+          <section class="stage-card" data-step="3">
+            <div class="stage-title">
+              <h3>Scanning followers...</h3>
+              <p>Comparing following lists and detecting unfollowers.</p>
+            </div>
+            <div class="status-row">
+              <div class="status"><span class="dot"></span> Scan in progress</div>
+              <div class="status" id="scanUserTag">User: —</div>
+            </div>
+            <div class="terminal" id="scanTerminal"></div>
+            <div class="progress-wrap">
+              <div class="progress-meta">
+                <span id="progressLabel">Preparing scan...</span>
+                <span id="progressPercent">0%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+              </div>
+            </div>
+            <div class="action-row">
+              <button class="btn btn-secondary" disabled>Scanning...</button>
+            </div>
+          </section>
+
+          <!-- STEP 4 -->
+          <section class="stage-card" data-step="4">
+            <div class="success-box">
+              <div class="success-ring">✓</div>
+              <div>
+                <h4>Scan Complete</h4>
+                <p>Download your results as a .txt file. The file is generated locally — nothing is stored on any server.</p>
+              </div>
+              <div class="summary-grid">
+                <div class="mini-stat"><span>Followers</span><strong id="followersCount">—</strong></div>
+                <div class="mini-stat"><span>Following</span><strong id="followingCount">—</strong></div>
+                <div class="mini-stat"><span>Not following back</span><strong id="unfollowersCount">—</strong></div>
+              </div>
+              <div class="action-row">
+                <button class="btn btn-primary"   id="downloadResultsBtn">Download Results (.txt)</button>
+                <button class="btn btn-secondary" id="restartBtn">New Scan</button>
+              </div>
+            </div>
+          </section>
+
+        </div><!-- /main-stage -->
+      </div><!-- /onboard-body -->
+    </div><!-- /onboard -->
+  </section>
+
+</main>
+
+<script>
+  // ─── State ───────────────────────────────────────────────
+  const state = {
+    step: 1,
+    username: "",
+    timerSec: 0,
+    timerInterval: null,
+    pollInterval: null,
+    results: [],
+    seenLogs: new Set()
+  };
+
+  // ─── DOM refs ─────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+  const stepCards  = [...document.querySelectorAll(".stage-card")];
+  const stepPills  = [...document.querySelectorAll("[data-step-pill]")];
+
+  const usernameInput    = $("usernameInput");
+  const usernameError    = $("usernameError");
+  const continueBtn      = $("continueBtn");
+  const heroStart        = $("heroStart");
+  const logoBtn          = $("logoBtn");
+  const scanPanel        = $("scanPanel");
+  const accountPreview   = $("accountPreview");
+  const scanUserTag      = $("scanUserTag");
+  const scanStatusBadge  = $("scanStatusBadge");
+  const scanTimer        = $("scanTimer");
+  const loginTerminal    = $("loginTerminal");
+  const scanTerminal     = $("scanTerminal");
+  const progressFill     = $("progressFill");
+  const progressPercent  = $("progressPercent");
+  const progressLabel    = $("progressLabel");
+  const followersCount   = $("followersCount");
+  const followingCount   = $("followingCount");
+  const unfollowersCount = $("unfollowersCount");
+  const launchLoginBtn   = $("launchLoginBtn");
+  const loginDoneBtn     = $("loginDoneBtn");
+  const backToStep1      = $("backToStep1");
+  const downloadResultsBtn = $("downloadResultsBtn");
+  const restartBtn       = $("restartBtn");
+
+  // ─── Step manager ─────────────────────────────────────────
+  const STATUS_LABELS = { 1: "Ready to scan", 2: "Login required", 3: "Scanning", 4: "Export ready" };
+
+  function setStep(n) {
+    state.step = n;
+    stepCards.forEach(c => c.classList.toggle("active", +c.dataset.step === n));
+    stepPills.forEach(p => {
+      const s = +p.dataset.stepPill;
+      p.classList.toggle("active", s === n);
+      p.classList.toggle("done",   s < n);
+    });
+    scanStatusBadge.textContent = STATUS_LABELS[n] || "Running";
+  }
+
+  // ─── Timer ────────────────────────────────────────────────
+  function startTimer() {
+    clearInterval(state.timerInterval);
+    state.timerSec = 0;
+    tickTimer();
+    state.timerInterval = setInterval(tickTimer, 1000);
+  }
+
+  function stopTimer() { clearInterval(state.timerInterval); }
+
+  function tickTimer() {
+    const m = String(Math.floor(state.timerSec / 60)).padStart(2, "0");
+    const s = String(state.timerSec % 60).padStart(2, "0");
+    scanTimer.textContent = `${m}:${s}`;
+    state.timerSec++;
+  }
+
+  // ─── Terminal helper ─────────────────────────────────────
+  function addLine(el, html, cls = "") {
+    const div = document.createElement("div");
+    div.className = "terminal-line" + (cls ? ` ${cls}` : "");
+    div.innerHTML = html;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  // ─── Scroll to panel ─────────────────────────────────────
+  function scrollToPanel() {
+    scanPanel.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  // ─── Progress updater ────────────────────────────────────
+  function setProgress(pct, label) {
+    const v = Math.max(0, Math.min(100, pct));
+    progressFill.style.width = v + "%";
+    progressPercent.textContent = v + "%";
+    if (label) progressLabel.textContent = label;
+  }
+
+  // ─── Sanitise username ────────────────────────────────────
+  function clean(val) { return val.replace(/[^a-zA-Z0-9._]/g, "").replace(/^@+/, "").trim(); }
+
+  // ─── Step 1 → 2: POST /api/start ─────────────────────────
+  function goToStep2() {
+    state.username = clean(usernameInput.value);
+    if (!state.username) {
+      usernameError.style.display = "block";
+      usernameInput.focus();
+      return;
+    }
+    usernameError.style.display = "none";
+    continueBtn.disabled = true;
+    continueBtn.textContent = "Launching...";
+
+    fetch("/api/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: state.username })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) throw new Error(data.error || "Failed to start");
+      accountPreview.textContent = `Handle: @${state.username}`;
+      scanUserTag.textContent    = `User: @${state.username}`;
+      setStep(2);
+      scrollToPanel();
+      // enable "Login Complete" after 3 s so Chrome has time to open
+      setTimeout(() => { loginDoneBtn.disabled = false; }, 3000);
+    })
+    .catch(err => {
+      usernameError.textContent  = "Could not connect to SnakeCheckr backend. Is app.py running?";
+      usernameError.style.display = "block";
+    })
+    .finally(() => {
+      continueBtn.disabled = false;
+      continueBtn.textContent = "Continue";
+    });
+  }
+
+  // ─── Step 2 → 3: POST /api/confirm-login ─────────────────
+  function confirmLogin() {
+    loginDoneBtn.disabled    = true;
+    launchLoginBtn.disabled  = true;
+    addLine(loginTerminal, "<strong>[ok]</strong> Login confirmed — starting scan...");
+
+    fetch("/api/confirm-login", { method: "POST" })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) throw new Error(data.error || "Login confirmation failed");
+      scanTerminal.innerHTML = "";
+      setProgress(0, "Preparing scan...");
+      setStep(3);
+      startTimer();
+      startPolling();
+    })
+    .catch(err => {
+      addLine(loginTerminal, `<strong>[error]</strong> ${err.message}`, "err");
+      loginDoneBtn.disabled   = false;
+      launchLoginBtn.disabled = false;
+    });
+  }
+
+  // ─── Polling: GET /api/scan-status ────────────────────────
+  function startPolling() {
+    clearInterval(state.pollInterval);
+    state.seenLogs.clear();
+
+    state.pollInterval = setInterval(() => {
+      fetch("/api/scan-status")
+      .then(r => r.json())
+      .then(data => {
+        // append only new log lines
+        (data.log || []).forEach(line => {
+          if (!state.seenLogs.has(line)) {
+            state.seenLogs.add(line);
+            addLine(scanTerminal, line);
+          }
+        });
+
+        setProgress(data.progress || 0);
+
+        if (data.step === "done") {
+          clearInterval(state.pollInterval);
+          stopTimer();
+          state.results = data.results || [];
+
+          followersCount.textContent   = (data.followers_count  ?? "—").toLocaleString();
+          followingCount.textContent   = (data.following_count  ?? "—").toLocaleString();
+          unfollowersCount.textContent = (data.unfollowers_count ?? state.results.length).toLocaleString();
+
+          setTimeout(() => setStep(4), 500);
+        }
+
+        if (data.step === "error") {
+          clearInterval(state.pollInterval);
+          stopTimer();
+          addLine(scanTerminal, `<strong>[error]</strong> ${data.error || "Unknown error."}`, "err");
+        }
+      })
+      .catch(() => {
+        addLine(scanTerminal, "<strong>[warn]</strong> Lost connection to backend. Retrying...", "muted");
+      });
+    }, 1500);
+  }
+
+  // ─── Download .txt ────────────────────────────────────────
+  function downloadResults() {
+    const lines = [
+      `SnakeCheckr — Results for @${state.username}`,
+      `Generated: ${new Date().toLocaleString()}`,
+      "",
+      ...state.results
+    ];
+    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = "not_following_back.txt";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // ─── Restart ─────────────────────────────────────────────
+  function restart() {
+    clearInterval(state.pollInterval);
+    stopTimer();
+    state.results = [];
+    state.timerSec = 0;
+    scanTimer.textContent = "00:00";
+    usernameInput.value = "";
+    accountPreview.textContent = "Handle: —";
+    scanUserTag.textContent    = "User: —";
+    loginTerminal.innerHTML = `
+      <div class="terminal-line"><strong>[init]</strong> Chrome environment ready.</div>
+      <div class="terminal-line"><strong>[auth]</strong> Manual login required in browser window.</div>
+      <div class="terminal-line muted">Log in, then click "Login Complete" to begin the scan.</div>
+    `;
+    scanTerminal.innerHTML = "";
+    setProgress(0, "Preparing scan...");
+    loginDoneBtn.disabled   = true;
+    launchLoginBtn.disabled = false;
+    setStep(1);
+    scrollToPanel();
+    usernameInput.focus();
+  }
+
+  // ─── Event listeners ─────────────────────────────────────
+  heroStart.addEventListener("click", () => { setStep(1); scrollToPanel(); usernameInput.focus(); });
+  logoBtn.addEventListener("click",   () => { restart(); });
+
+  continueBtn.addEventListener("click", goToStep2);
+  usernameInput.addEventListener("keydown", e => { if (e.key === "Enter") goToStep2(); });
+
+  launchLoginBtn.addEventListener("click", () => {
+    addLine(loginTerminal, "<strong>[launch]</strong> Opening Chrome session on your machine...");
+    addLine(loginTerminal, "<strong>[wait]</strong> Log in to Instagram, then click Login Complete.");
+  });
+
+  loginDoneBtn.addEventListener("click", confirmLogin);
+  backToStep1.addEventListener("click",  () => { setStep(1); usernameInput.focus(); });
+
+  downloadResultsBtn.addEventListener("click", downloadResults);
+  restartBtn.addEventListener("click",         restart);
+
+  // ─── Init ────────────────────────────────────────────────
+  setStep(1);
+</script>
+
+</body>
+</html>
